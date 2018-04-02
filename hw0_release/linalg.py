@@ -12,7 +12,7 @@ def dot_product(vector1, vector2):
     """
     out = None
     ### YOUR CODE HERE
-    pass
+    out = np.dot(vector1, vector2)
     ### END YOUR CODE
 
     return out
@@ -29,7 +29,7 @@ def matrix_mult(M, vector1, vector2):
     """
     out = None
     ### YOUR CODE HERE
-    pass
+    out = np.dot(vector1.T, vector2) * np.dot(M, vector1)
     ### END YOUR CODE
 
     return out
@@ -48,7 +48,7 @@ def svd(matrix):
     s = None
     v = None
     ### YOUR CODE HERE
-    pass
+    u, s, v = np.linalg.svd(matrix)
     ### END YOUR CODE
 
     return u, s, v
@@ -65,7 +65,7 @@ def get_singular_values(matrix, n):
     singular_values = None
     u, s, v = svd(matrix)
     ### YOUR CODE HERE
-    pass
+    singular_values = s[:n]
     ### END YOUR CODE
     return singular_values
 
@@ -80,7 +80,7 @@ def eigen_decomp(matrix):
     w = None
     v = None
     ### YOUR CODE HERE
-    pass
+    w, v = np.linalg.eig(matrix)
     ### END YOUR CODE
     return w, v
 
@@ -98,6 +98,7 @@ def get_eigen_values_and_vectors(matrix, num_values):
     eigen_values = []
     eigen_vectors = []
     ### YOUR CODE HERE
-    pass
+    eigen_values = w[:num_values]
+    eigen_vectors = v[:num_values]
     ### END YOUR CODE
     return eigen_values, eigen_vectors

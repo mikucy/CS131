@@ -18,7 +18,7 @@ def load(image_path):
 
     ### YOUR CODE HERE
     # Use skimage io.imread
-    pass
+    out = io.imread(image_path)
     ### END YOUR CODE
 
     return out
@@ -38,7 +38,7 @@ def change_value(image):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    out = 0.5 * np.square(image)
     ### END YOUR CODE
 
     return out
@@ -56,7 +56,7 @@ def convert_to_grey_scale(image):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    out = np.sum(image * np.array([3, 6, 1]) / 10, axis=2)
     ### END YOUR CODE
 
     return out
@@ -75,7 +75,10 @@ def rgb_decomposition(image, channel):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    dic = {'r':0, 'g':1, 'b':2}
+    mat = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]], dtype=np.float32)
+    rgb = np.array(image)
+    out = rgb * mat[dic[channel.lower()]]
     ### END YOUR CODE
 
     return out
@@ -95,7 +98,9 @@ def lab_decomposition(image, channel):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    dic = {'l':0, 'a':1, 'b':2}
+    mat = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]], dtype=np.float32)
+    out = lab * mat[dic[channel.lower()]]
     ### END YOUR CODE
 
     return out
@@ -115,7 +120,9 @@ def hsv_decomposition(image, channel='H'):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    dic = {'h':0, 's':1, 'v':2}
+    mat = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]], dtype=np.float32)
+    out = hsv * mat[dic[channel.lower()]]
     ### END YOUR CODE
 
     return out
@@ -136,7 +143,11 @@ def mix_images(image1, image2, channel1, channel2):
 
     out = None
     ### YOUR CODE HERE
-    pass
+    image1 = rgb_decomposition(image1, channel1)
+    image2 = rgb_decomposition(image2, channel2)
+    out = np.zeros_like(image1)
+    out[:, :image1.shape[1]/2, :] = image1[:, :image1.shape[1]/2, :]
+    out[:, image1.shape[1]/2:, :] = image2[:, image1.shape[1]/2:, :]
     ### END YOUR CODE
 
     return out
