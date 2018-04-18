@@ -33,7 +33,12 @@ class PCA(object):
         # YOUR CODE HERE
         # 1. Compute the mean and store it in self.mean
         # 2. Apply either method to `X_centered`
-        pass
+        self.mean = np.mean(X, axis=0)
+        X_centered = X - self.mean
+        if method == 'svd':
+            self.W_pca = self._svd(X_centered)[0]
+        else:
+            self.W_pca = self._eigen_decomp(X_centered)[0]
         # END YOUR CODE
 
         # Make sure that X_centered has mean zero
@@ -71,7 +76,11 @@ class PCA(object):
         #     1. compute the covariance matrix of X, of shape (D, D)
         #     2. compute the eigenvalues and eigenvectors of the covariance matrix
         #     3. Sort both of them in decreasing order (ex: 1.0 > 0.5 > 0.0 > -0.2 > -1.2)
-        pass
+        covariance = np.dot(X.T, X)
+        e_vals, e_vecs = np.linalg.eig(covariance)
+        idx = np.argsort(-e_vals)
+        e_vals = e_vals[idx]
+        e_vecs = evecs[:, idx] 
         # END YOUR CODE
 
         # Check the output shapes
@@ -96,7 +105,7 @@ class PCA(object):
         # YOUR CODE HERE
         # Here, compute the SVD of X
         # Make sure to return vecs as the matrix of vectors where each column is a singular vector
-        pass
+        _, vals, vecs = np.linalg.svd(X)
         # END YOUR CODE
         assert vecs.shape == (D, D)
         K = min(N, D)
@@ -120,7 +129,8 @@ class PCA(object):
         # We need to modify X in two steps:
         #     1. first substract the mean stored during `fit`
         #     2. then project onto a subspace of dimension `n_components` using `self.W_pca`
-        pass
+        X = X - self.mean
+        X_proj = X.dot(self.W_pca[:, :n_components])
         # END YOUR CODE
 
         assert X_proj.shape == (N, n_components), "X_proj doesn't have the right shape"
@@ -146,7 +156,8 @@ class PCA(object):
         # Steps:
         #     1. project back onto the original space of dimension D
         #     2. add the mean that we substracted in `transform`
-        pass
+        X = X_proj.dot(self.W_pca[:n_components, :])
+        X = X + self.mean
         # END YOUR CODE
 
         return X
@@ -185,7 +196,9 @@ class LDA(object):
         # Solve generalized eigenvalue problem for matrices `scatter_between` and `scatter_within`
         # Use `scipy.linalg.eig` instead of numpy's eigenvalue solver.
         # Don't forget to sort the values and vectors in descending order.
-        pass
+        e_vals, e_vecs = scipy.linalg.eig(scatter_between, scatter_within)
+        idx = np.argsort(-e_vals)
+        e_vecs = e_vecs[:, idx]
         # END YOUR CODE
 
         self.W_lda = e_vecs
@@ -222,7 +235,10 @@ class LDA(object):
         for i in np.unique(y):
             # YOUR CODE HERE
             # Get the covariance matrix for class i, and add it to scatter_within
-            pass
+            X_i = X[y == i]
+            X_centered = X_i - np.mean(X_i, axis=0)
+            S_i = X_centered.T.dot(X_centered)
+            scatter_within += S_i
             # END YOUR CODE
 
         return scatter_within
@@ -251,13 +267,16 @@ class LDA(object):
         mu = X.mean(axis=0)
         for i in np.unique(y):
             # YOUR CODE HERE
-            pass
+            X_i = X[y == i]
+            N_i = X_i.shape[0]
+            mu_i = np.mean(X_i, axis=0)
+            scatter_between += N_i * (mu_i - mu).T.dot(mu_i - mu)
             # END YOUR CODE
 
         return scatter_between
 
     def transform(self, X, n_components):
-        """Project X onto a lower dimensional space using self.W_pca.
+        """Project X onto a lower dimensional space using self.W_lda.
 
         Args:
             X: numpy array of shape (N, D). Each row is an example with D features.
@@ -270,9 +289,9 @@ class LDA(object):
         X_proj = None
         # YOUR CODE HERE
         # project onto a subspace of dimension `n_components` using `self.W_lda`
-        pass
+        X_proj = X.dot(self.W_lda[:, :n_components])
         # END YOUR CODE
-
+        
         assert X_proj.shape == (N, n_components), "X_proj doesn't have the right shape"
 
         return X_proj
