@@ -36,7 +36,13 @@ def kmeans(features, k, num_iters=100):
 
     for n in range(num_iters):
         ### YOUR CODE HERE
-        pass
+        for i in range(N):
+            assignments[i] = np.argmin(np.sum((features[i] - centers)**2, axis=1))
+        tmp = centers.copy()
+        for j in range(k):
+            centers[j] = np.mean(features[assignments == j], axis=0)
+        if np.allclose(tmp, centers):
+            break
         ### END YOUR CODE
 
     return assignments
@@ -72,7 +78,14 @@ def kmeans_fast(features, k, num_iters=100):
 
     for n in range(num_iters):
         ### YOUR CODE HERE
-        pass
+        f_tmp = np.tile(features, (k, 1))
+        c_tmp = np.repeat(centers, N, axis=0)
+        assignments = np.argmin(np.sum((f_tmp - c_tmp)**2, axis=1).reshape(k, N), axis=0)
+        tmp = centers.copy()
+        for j in range(k):
+            centers[j] = np.mean(features[assignments == j], axis=0)
+        if np.allclose(tmp, centers):
+            break
         ### END YOUR CODE
 
     return assignments
@@ -124,7 +137,17 @@ def hierarchical_clustering(features, k):
 
     while n_clusters > k:
         ### YOUR CODE HERE
-        pass
+        # TODO
+        dist_min = 1e10
+        idx_min = (0, 0)
+        for i in range(n_clusters):
+            for j in range(i+1, n_clusters):
+                dist_ij = np.sum((centers[i] - centers[j])**2)
+                if dist_ij < dist_min:
+                    dist_min = dist_ij
+                    idx_min = (i, j)
+        assignments[idx_min[1]] = idx_min[0]
+        n_clusters -= 1
         ### END YOUR CODE
 
     return assignments
@@ -145,7 +168,7 @@ def color_features(img):
     features = np.zeros((H*W, C))
 
     ### YOUR CODE HERE
-    pass
+    features = img.reshape(H*W, C)
     ### END YOUR CODE
 
     return features
@@ -173,7 +196,12 @@ def color_position_features(img):
     features = np.zeros((H*W, C+2))
 
     ### YOUR CODE HERE
-    pass
+    x = np.mgrid[:H, :W][0]
+    y = np.mgrid[:H, :W][1]
+    new_img = np.dstack((img, x, y))
+    new_img = (new_img - np.mean(new_img)) / np.std(new_img)
+    for i in range(C+2):
+        features[:, i] = new_img[:, :, i].flatten()
     ### END YOUR CODE
 
     return features
@@ -213,7 +241,7 @@ def compute_accuracy(mask_gt, mask):
 
     accuracy = None
     ### YOUR CODE HERE
-    pass
+    accuracy = np.mean(mask_gt == mask)
     ### END YOUR CODE
 
     return accuracy
