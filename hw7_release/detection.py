@@ -1,5 +1,5 @@
 import numpy as np
-from skimage import feature,data, color, exposure, io
+from skimage import feature, data, color, exposure, io
 from skimage.transform import rescale, resize, downscale_local_mean
 from skimage.filters import gaussian
 from scipy import signal
@@ -17,11 +17,11 @@ def hog_feature(image, pixel_per_cell = 8):
         pixel_per_cell: number of pixels in each cell, an argument for hog descriptor
         
     Returns:
-        score: a vector of hog representation
+        hogFeature: a vector of hog representation
         hogImage: an image representation of hog provided by skimage
     '''
     ### YOUR CODE HERE
-    pass
+    hogFeature, hogImage = feature.hog(image, pixels_per_cell=(pixel_per_cell, pixel_per_cell), visualise=True)
     ### END YOUR CODE
     return (hogFeature, hogImage)
 
@@ -52,7 +52,17 @@ def sliding_window(image, base_score, stepSize, windowSize, pixel_per_cell=8):
     response_map = np.zeros((H//stepSize+1, W//stepSize+1))
     
     ### YOUR CODE HERE
-    pass
+    for i in range(0, H+1, stepSize):
+        for j in range(0, W+1, stepSize):
+            window = pad_image[i: i+winH, j: j+winW]
+            hogFeature = feature.hog(window, pixels_per_cell=(pixel_per_cell, pixel_per_cell))
+            score = hogFeature.T.dot(base_score)
+            response_map[i // stepSize, j // stepSize] = score
+            if score > max_score:
+                max_score = score
+                maxr = i - winH // 2
+                maxc = j - winW // 2
+
     ### END YOUR CODE
     
     
@@ -62,7 +72,7 @@ def sliding_window(image, base_score, stepSize, windowSize, pixel_per_cell=8):
 def pyramid(image, scale=0.9, minSize=(200, 100)):
     '''
     Generate image pyramid using the given image and scale.
-    Reducing the size of the image until on of the height or
+    Reducing the size of the image until one of the height or
     width reaches the minimum limit. In the ith iteration, 
     the image is resized to scale^i of the original image.
     
@@ -81,7 +91,9 @@ def pyramid(image, scale=0.9, minSize=(200, 100)):
     images.append((current_scale, image))
     # keep looping over the pyramid
     ### YOUR CODE HERE
-    pass
+    while current_scale * image.shape[0] > minSize[0] and current_scale * image.shape[1] > minSize[1]:
+        current_scale *= scale
+        images.append((current_scale, rescale(image, current_scale)))
     ### END YOUR CODE
     return images
 
@@ -108,7 +120,15 @@ def pyramid_score(image,base_score, shape, stepSize=20, scale = 0.9, pixel_per_c
     max_response_map =np.zeros(image.shape)
     images = pyramid(image, scale)
     ### YOUR CODE HERE
-    pass
+    images = pyramid(image, scale=scale)
+    for s, i in images:
+        score, r, c, m = sliding_window(i, base_score, stepSize, shape)
+        if score > max_score:
+            max_score = score
+            maxr = r
+            maxc = c
+            max_response_map = m
+            max_scale = s
     ### END YOUR CODE
     return max_score, maxr, maxc, max_scale, max_response_map
 
@@ -120,7 +140,7 @@ def compute_displacement(part_centers, face_shape):
         image, face center could be computed by finding the center
         of the image. Vector mu is computed by taking an average from
         the rows of d. And sigma is the standard deviation among 
-        among the rows. Note that the heatmap pixels will be shifted 
+        the rows. Note that the heatmap pixels will be shifted 
         by an int, so mu is an int vector.
     
     Args:
@@ -134,7 +154,10 @@ def compute_displacement(part_centers, face_shape):
     '''
     d = np.zeros((part_centers.shape[0],2))
     ### YOUR CODE HERE
-    pass
+    d = np.array([face_shape[0] // 2, face_shape[1] // 2]) - part_centers
+    mu = np.mean(d, axis=0)
+    mu = mu.astype('int64')
+    sigma = np.std(d, axis=0)
     ### END YOUR CODE
     return mu, sigma
         
