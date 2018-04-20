@@ -33,14 +33,19 @@ def lucas_kanade(img1, img2, keypoints, window_size=5):
     # For each [y, x] in keypoints, estimate flow vector [vy, vx]
     # using Lucas-Kanade method and append it to flow_vectors.
     for y, x in keypoints:
-        # Keypoints can be loacated between integer pixels (subpixel locations).
+        # Keypoints can be located between integer pixels (subpixel locations).
         # For simplicity, we round the keypoint coordinates to nearest integer.
         # In order to achieve more accurate results, image brightness at subpixel
         # locations can be computed using bilinear interpolation.
         y = int(round(y)); x = int(round(x))
 
         ### YOUR CODE HERE
-        pass
+        A1 = Ix[y-w: y+w+1, x-w: x+w+1]
+        A2 = Iy[y-w: y+w+1, x-w: x+w+1]
+        A = np.c_[A1.reshape(-1,1), A2.reshape(-1,1)]
+        b = -It[y-w: y+w+1, x-w: x+w+1].reshape(-1,1)
+        d = np.dot(np.linalg.inv(A.T.dot(A)), A.T.dot(b))
+        flow_vectors.append(d.flatten())
         ### END YOUR CODE
 
     flow_vectors = np.array(flow_vectors)
@@ -86,7 +91,10 @@ def iterative_lucas_kanade(img1, img2, keypoints,
 
         # TODO: Compute inverse of G at point (x1, y1)
         ### YOUR CODE HERE
-        pass
+        A1 = Ix[y1-w: y1+w+1, x1-w: x1+w+1]
+        A2 = Iy[y1-w: y1+w+1, x1-w: x1+w+1]
+        G = np.array([[np.sum(A1**2), np.sum(A1*A2)], [np.sum(A1*A2), np.sum(A2**2)]])
+        G_inv = np.linalg.inv(G)
         ### END YOUR CODE
 
         # iteratively update flow vector
@@ -97,7 +105,9 @@ def iterative_lucas_kanade(img1, img2, keypoints,
 
             # TODO: Compute bk and vk = inv(G) x bk
             ### YOUR CODE HERE
-            pass
+            Ik = img1[y1, x1] - img2[y2, x2]
+            bk = np.array([np.sum(Ik*A1), np.sum(Ik*A2)])
+            vk = G_inv.dot(bk)
             ### END YOUR CODE
 
             # Update flow vector by vk
@@ -138,7 +148,11 @@ def pyramid_lucas_kanade(img1, img2, keypoints,
 
     for L in range(level, -1, -1):
         ### YOUR CODE HERE
-        pass
+        I_L = pyramid1[L]
+        J_L = pyramid2[L]
+        p_L = keypoints / scale**L
+        d = iterative_lucas_kanade(I_L, J_L, p_L, window_size=window_size, num_iters=num_iters, g=g)
+        g = scale * (g + d)
         ### END YOUR CODE
 
     d = g + d
@@ -159,7 +173,9 @@ def compute_error(patch1, patch2):
     assert patch1.shape == patch2.shape, 'Differnt patch shapes'
     error = 0
     ### YOUR CODE HERE
-    pass
+    patch1_n = (patch1 - np.mean(patch1)) / np.std(patch1)
+    patch2_n = (patch2 - np.mean(patch2)) / np.std(patch2)
+    error = np.mean(np.square(patch1_n - patch2_n))
     ### END YOUR CODE
     return error
 
@@ -240,7 +256,16 @@ def IoU(bbox1, bbox2):
     score = 0
 
     ### YOUR CODE HERE
-    pass
+    if x1 < x2:
+        if y1 < y2:
+            score = (x1 + w1 - x2) * (y1 + h1 - y2) / (w1 * h1 + w2 * h2 - (x1 + w1 - x2) * (y1 + h1 - y2))
+        else:
+            score = (x1 + w1 - x2) * (y2 + h2 - y1) / (w1 * h1 + w2 * h2 - (x1 + w1 - x2) * (y2 + h2 - y1))
+    else:
+        if y1 < y2:
+            score = (x2 + w2 - x1) * (y1 + h1 - y2) / (w1 * h1 + w2 * h2 - (x2 + w2 - x1) * (y1 + h1 - y2))
+        else:
+            score = (x2 + w2 - x1) * (y2 + h2 - y1) / (w1 * h1 + w2 * h2 - (x2 + w2 - x1) * (y2 + h2 - y1))
     ### END YOUR CODE
 
     return score
