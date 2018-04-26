@@ -122,7 +122,7 @@ def pyramid_score(image,base_score, shape, stepSize=20, scale = 0.9, pixel_per_c
     ### YOUR CODE HERE
     images = pyramid(image, scale=scale)
     for s, i in images:
-        score, r, c, m = sliding_window(i, base_score, stepSize, shape)
+        score, r, c, m = sliding_window(i, base_score, stepSize, shape, pixel_per_cell=pixel_per_cell)
         if score > max_score:
             max_score = score
             maxr = r
@@ -173,7 +173,10 @@ def shift_heatmap(heatmap, mu):
             new_heatmap: np array of (h,w)
     '''
     ### YOUR CODE HERE
-    pass
+    heatmap = heatmap / np.max(heatmap)
+    row, col = mu
+    new_heatmap = np.r_[heatmap[row: , :], heatmap[: row, :]]
+    new_heatmap = np.c_[new_heatmap[:, col: ], new_heatmap[:, : col]]
     ### END YOUR CODE
     return new_heatmap
     
@@ -193,9 +196,13 @@ def gaussian_heatmap(heatmap_face, heatmaps, sigmas):
         new_image: an image np array of (h,w) after gaussian convoluted
     '''
     ### YOUR CODE HERE
-    pass
+    new_image = heatmap_face
+    for heatmap, sigma in zip(heatmaps, sigmas):
+        new_heatmap = gaussian(heatmap, sigma)
+        new_image += new_heatmap
+    r, c = np.unravel_index(np.argmax(new_image), new_image.shape)
     ### END YOUR CODE
-    return heatmap, r , c
+    return new_image, r, c
             
       
 def detect_multiple(image, response_map):
@@ -203,7 +210,7 @@ def detect_multiple(image, response_map):
     Extra credit
     '''
     ### YOUR CODE HERE
-    pass
+    # TODO
     ### END YOUR CODE
     return detected_faces
 
