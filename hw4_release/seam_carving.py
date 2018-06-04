@@ -514,7 +514,35 @@ def remove_object(image, mask):
     out = np.copy(image)
 
     ### YOUR CODE HERE
-    # TODO
+    from skimage import measure
+    label_image = measure.label(mask)
+    regions = measure.regionprops(label_image)
+    region = regions[0]
+    if len(regions) != 1:
+        print("Maybe two objects to remove?")
+        # Find the biggest area of region
+        for i in regions:
+            if i.area > region.area:
+                region = i
+    transposeImage = False
+    if region.bbox[2] - region.bbox[0] < region.bbox[3] - region.bbox[1]:
+        out = np.transpose(out, (1, 0, 2))
+        mask = np.transpose(mask, (1, 0))
+        transposeImage = True
+    count = 0   # count time for all iteration
+    while not np.all(mask == 0):
+        energy_image = energy_function(out)
+        energy_image = energy_image + energy_image * mask * (-1000)
+        vcost, vpaths = compute_forward_cost(out, energy_image)
+        end = np.argmin(vcost[-1])
+        seam = backtrack_seam(vpaths, end)
+        out = remove_seam(out, seam)
+        mask = remove_seam(mask, seam)
+        count += 1
+    #print("count = ", count)
+    out = enlarge(out, out.shape[1] + count)
+    if transposeImage:
+        out = np.transpose(out, (1, 0, 2))
     ### END YOUR CODE
 
     return out
