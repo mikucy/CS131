@@ -514,6 +514,7 @@ def remove_object(image, mask):
     out = np.copy(image)
 
     ### YOUR CODE HERE
+    # Refer to @lgqfhwy
     from skimage import measure
     label_image = measure.label(mask)
     regions = measure.regionprops(label_image)
