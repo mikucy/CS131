@@ -137,16 +137,22 @@ def hierarchical_clustering(features, k):
 
     while n_clusters > k:
         ### YOUR CODE HERE
-        # TODO
-        dist_min = 1e10
-        idx_min = (0, 0)
-        for i in range(n_clusters):
-            for j in range(i+1, n_clusters):
-                dist_ij = np.sum((centers[i] - centers[j])**2)
-                if dist_ij < dist_min:
-                    dist_min = dist_ij
-                    idx_min = (i, j)
-        assignments[idx_min[1]] = idx_min[0]
+        distances = pdist(centers)
+        matrixDistances = squareform(distances)
+        matrixDistances = np.where(matrixDistances != 0.0, matrixDistances, 1e10)
+        minValue = np.argmin(matrixDistances)
+        min_i = minValue // n_clusters
+        min_j = minValue - min_i * n_clusters
+        if min_j < min_i:
+            min_i, min_j = min_j, min_i
+        for i in range(N):
+            if assignments[i] == min_j:
+                assignments[i] = min_i
+        for i in range(N):
+            if assignments[i] > min_j:
+                assignments[i] -= 1
+        centers = np.delete(centers, min_j, axis = 0)
+        centers[min_i] = np.mean(features[assignments == min_i], axis = 0)
         n_clusters -= 1
         ### END YOUR CODE
 
@@ -196,12 +202,10 @@ def color_position_features(img):
     features = np.zeros((H*W, C+2))
 
     ### YOUR CODE HERE
-    x = np.mgrid[:H, :W][0]
-    y = np.mgrid[:H, :W][1]
-    new_img = np.dstack((img, x, y))
-    new_img = (new_img - np.mean(new_img)) / np.std(new_img)
-    for i in range(C+2):
-        features[:, i] = new_img[:, :, i].flatten()
+    locations = np.dstack(np.mgrid[0 : H, 0 : W]).reshape((H * W, 2))
+    features[:, 0 : C] = color.reshape((H * W, C))
+    features[:, C : C + 2] = locations
+    features = (features - np.mean(features, axis = 0)) / np.std(features, axis = 0)
     ### END YOUR CODE
 
     return features
