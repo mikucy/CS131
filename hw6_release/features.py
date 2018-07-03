@@ -76,11 +76,11 @@ class PCA(object):
         #     1. compute the covariance matrix of X, of shape (D, D)
         #     2. compute the eigenvalues and eigenvectors of the covariance matrix
         #     3. Sort both of them in decreasing order (ex: 1.0 > 0.5 > 0.0 > -0.2 > -1.2)
-        covariance = np.dot(X.T, X)
+        covariance = np.dot(X.T, X) / (N - 1)
         e_vals, e_vecs = np.linalg.eig(covariance)
         idx = np.argsort(-e_vals)
         e_vals = e_vals[idx]
-        e_vecs = evecs[:, idx] 
+        e_vecs = e_vecs[:, idx]
         # END YOUR CODE
 
         # Check the output shapes
@@ -111,7 +111,7 @@ class PCA(object):
         K = min(N, D)
         assert vals.shape == (K,)
 
-        return vecs, vals
+        return vecs.T, vals
 
     def transform(self, X, n_components):
         """Center and project X onto a lower dimensional space using self.W_pca.
